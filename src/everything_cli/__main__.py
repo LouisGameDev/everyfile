@@ -25,8 +25,8 @@ _EPILOG = textwrap.dedent("""\
     output modes:
       (default)    human-readable table on stderr + NDJSON on stdout when piped
       -j/--json    force NDJSON to stdout even on a terminal
-      -l/--list    newline-separated full paths (ideal for shell use)
-      -0/--null    null-separated full paths (for xargs -0)
+      -l/--list    newline-separated full paths (for ForEach-Object, etc.)
+      -0/--null    null-separated full paths (for paths with special characters)
       -q/--quiet   suppress all stderr output
 
     sorting:
@@ -40,8 +40,7 @@ _EPILOG = textwrap.dedent("""\
 
         ev --instances                          list running instances
         ev --instance 1.4 ext:py                query via Everything 1.4
-        $env:EVERYTHING_INSTANCE = "1.5a"       persist for session (PowerShell)
-        export EVERYTHING_INSTANCE=1.5a         persist for session (bash/zsh)
+        $env:EVERYTHING_INSTANCE = "1.5a"       persist for session
 
       Priority: --instance flag > $EVERYTHING_INSTANCE > auto-detect.
 
@@ -68,13 +67,11 @@ _EPILOG = textwrap.dedent("""\
 
     using results with other commands:
       Open in VS Code:      code $(ev myfile.py -n 1 -l)
-      Open in editor:       vim $(ev myconfig -n 1 -l)
-      Feed to xargs:        ev ext:log -l | xargs rm
-      Null-safe xargs:      ev ext:tmp -0 | xargs -0 rm
-      PowerShell foreach:   ev ext:py -l | ForEach-Object { code $_ }
+      Open in editor:       notepad $(ev myconfig -n 1 -l)
+      Delete temp files:    ev ext:tmp -l | ForEach-Object { Remove-Item $_ }
+      Open all matches:     ev ext:py -l | ForEach-Object { code $_ }
       Select a range:       ev ext:py -l | Select-Object -Skip 5 -First 3
-      Bash range:           ev ext:py -l | sed -n '6,8p'
-      Count lines:          ev ext:py -l | wc -l
+      Count matches:        (ev ext:py -l | Measure-Object).Count
       Chain filters:        ev ext:py | ev "path:src" | ev "!test"
 
     examples:
@@ -83,7 +80,7 @@ _EPILOG = textwrap.dedent("""\
       ev ext:py --sort size --desc     largest Python files first
       ev "*.rs" -c -r                  case-sensitive regex search
       ev --count ext:py                just the count
-      ev ext:py -l | xargs wc -l      line count of every Python file
+      ev ext:py -l | Measure-Object -Line    count matching files
       ev ext:py -f all | ev filter --size-gt 5000
       ev ext:py -f all | ev pick full_path size
 """)
@@ -197,9 +194,9 @@ def _build_main_parser() -> argparse.ArgumentParser:
     parser.add_argument("-j", "--json", action="store_true",
                         help="force NDJSON to stdout even when interactive (auto when piped)")
     parser.add_argument("-l", "--list", action="store_true",
-                        help="output newline-separated full paths (for xargs, etc.)")
+                        help="output newline-separated full paths (for ForEach-Object, etc.)")
     parser.add_argument("-0", "--null", action="store_true",
-                        help="like --list but null-separated (for xargs -0)")
+                        help="like --list but null-separated (for paths with special characters)")
     parser.add_argument("-S", "--search", action="store_true",
                         help="force Everything search even when stdin is piped")
 
