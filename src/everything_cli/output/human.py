@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import collections
 import sys
+from typing import Any
 
 _PROG = "everything"
 
@@ -80,7 +81,7 @@ def service_info(
 
 
 def instance_list(
-    instances: list[dict],
+    instances: list[dict[str, Any]],
     active_name: str | None,
     active_source: str | None,
     env_var: str,
@@ -142,7 +143,7 @@ def _matches_active(name: str, active_name: str | None) -> bool:
 DEFAULT_COLUMNS: list[str] = ["name", "path", "date_modified"]
 
 
-def _format_size(val) -> str:
+def _format_size(val: Any) -> str:
     """Format byte size to human-readable string."""
     if not isinstance(val, (int, float)) or val < 0:
         return str(val)
@@ -157,7 +158,7 @@ def _format_size(val) -> str:
     return f"{size:.1f} {units[-1]}"
 
 
-def _format_date(val) -> str:
+def _format_date(val: Any) -> str:
     """Format ISO 8601 timestamp to a compact human-readable form."""
     if not val or not isinstance(val, str):
         return ""
@@ -167,10 +168,10 @@ def _format_date(val) -> str:
         time_short = time_part[:5]  # HH:MM
         return f"{date_part} {time_short}"
     except (ValueError, IndexError):
-        return val
+        return str(val)
 
 
-def _format_value(field: str, val) -> str:
+def _format_value(field: str, val: Any) -> str:
     """Format a field value for human-readable display."""
     if val is None:
         return ""
@@ -200,7 +201,7 @@ class ResultPrinter:
         self._has_size = False
         self._ext_counts: collections.Counter[str] = collections.Counter()
 
-    def print_record(self, record: dict) -> None:
+    def print_record(self, record: dict[str, Any]) -> None:
         """Print one result record as a human-readable line to stderr."""
         parts: list[str] = []
         for col in self.columns:

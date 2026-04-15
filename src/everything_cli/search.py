@@ -6,6 +6,7 @@ import json
 import os
 import platform
 import sys
+from typing import Any
 
 from .output import human, ndjson
 from .querymatch import matches_query, parse_query
@@ -52,7 +53,7 @@ def _instance_source(explicit: str | None) -> str | None:
     return "auto-detect"
 
 
-def _write_list_entry(record: dict, sep: str) -> None:
+def _write_list_entry(record: dict[str, Any], sep: str) -> None:
     """Write full_path to stdout with the given separator."""
     path = record.get("full_path") or record.get("path", "")
     try:

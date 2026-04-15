@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import sys
 from dataclasses import dataclass
+from typing import Any
 
 from .output.human import warning
 from .output.ndjson import write_record
@@ -29,7 +30,7 @@ class FilterConfig:
     attr_chars: str | None = None
 
 
-def _check_field(record: dict, field: str, warned: set[str]) -> bool:
+def _check_field(record: dict[str, Any], field: str, warned: set[str]) -> bool:
     """Return True if field is present, else warn once and return False."""
     if field in record:
         return True
@@ -47,7 +48,7 @@ def _date_lt(record_val: str, threshold: str) -> bool:
     return parse_iso_date(record_val) < parse_iso_date(threshold)
 
 
-def _matches(record: dict, config: FilterConfig, warned: set[str]) -> bool:
+def _matches(record: dict[str, Any], config: FilterConfig, warned: set[str]) -> bool:
     """Return True if record passes ALL active filters."""
     if config.name_glob is not None:
         if not _check_field(record, "name", warned):

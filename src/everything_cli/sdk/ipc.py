@@ -22,6 +22,7 @@ import ctypes
 import ctypes.wintypes as wt
 import struct
 from collections.abc import Iterator
+from typing import Any
 
 from .constants import RequestFlags, SortType
 
@@ -140,7 +141,7 @@ _BASE_CLASS = "EVERYTHING_TASKBAR_NOTIFICATION"
 _KNOWN_INSTANCES = ("1.5a", "1.5", "1.4")
 
 
-def list_instances() -> list[dict]:
+def list_instances() -> list[dict[str, Any]]:
     """Scan for all running Everything instances.
 
     Returns a list of dicts, each with:
@@ -148,7 +149,7 @@ def list_instances() -> list[dict]:
       class    – window class string
       hwnd     – window handle as int
     """
-    found: list[dict] = []
+    found: list[dict[str, Any]] = []
     for name in _KNOWN_INSTANCES:
         cls = f"{_BASE_CLASS}_({name})"
         hwnd = user32.FindWindowW(cls, None)
@@ -246,7 +247,7 @@ _DefWindowProcW.restype = ctypes.c_long
 
 
 def _def_window_proc(hwnd: int, msg: int, wparam: int, lparam: int) -> int:
-    return _DefWindowProcW(hwnd, msg, wparam, lparam)
+    return int(_DefWindowProcW(hwnd, msg, wparam, lparam))
 
 
 # Must keep a reference to prevent GC of the callback
@@ -446,27 +447,27 @@ def _parse_item_data(
     data_offset: int,
     request_flags: int,
     wanted_fields: set[str],
-) -> dict:
+) -> dict[str, Any]:
     """Parse one item's data blob according to request_flags ordering."""
     pos = data_offset
-    record: dict = {}
+    record: dict[str, Any] = {}
 
     for flag_bit, field_name, reader_type in _FIELD_ORDER:
         if not request_flags & flag_bit:
             continue
 
         if reader_type == "wstring":
-            value, pos = _read_wstring(data, pos)
+            sval, pos = _read_wstring(data, pos)
             if field_name in wanted_fields:
-                record[field_name] = value
+                record[field_name] = sval
         elif reader_type == "uint64":
-            value, pos = _read_uint64(data, pos)
+            ival, pos = _read_uint64(data, pos)
             if field_name in wanted_fields:
-                record[field_name] = value
+                record[field_name] = ival
         elif reader_type == "dword":
-            value, pos = _read_dword(data, pos)
+            dval, pos = _read_dword(data, pos)
             if field_name in wanted_fields:
-                record[field_name] = value
+                record[field_name] = dval
 
     return record
 
@@ -475,7 +476,7 @@ def parse_response(
     data: bytearray,
     fields: list[str],
     request_flags: int,  # pylint: disable=unused-argument  # kept for API compat; resp uses header flags
-) -> Iterator[dict]:
+) -> Iterator[dict[str, Any]]:
     """Parse an EVERYTHING_IPC_LIST2 response buffer into result dicts.
 
     Yields one dict per result with the requested fields.
@@ -551,7 +552,7 @@ def ipc_query(
     match_whole_word: bool = False,
     regex: bool = False,
     instance: str | None = None,
-) -> tuple[Iterator[dict], int, int]:
+) -> tuple[Iterator[dict[str, Any]], int, int]:
     """Execute an IPC2 query and return (results_iterator, num_results, total_results).
 
     The caller should consume the iterator (it parses lazily from the response buffer).
@@ -602,7 +603,7 @@ def ipc_query(
         user32.DestroyWindow(reply_hwnd)
 
 
-def ipc_get_version(instance: str | None = None) -> dict:
+def ipc_get_version(instance: str | None = None) -> dict[str, Any]:
     """Get Everything version via WM_IPC messages.
 
     Sends 4 WM_USER messages (major/minor/revision/build). Safe for all versions
@@ -636,7 +637,7 @@ def ipc_get_version(instance: str | None = None) -> dict:
 # These are skipped for 1.5a instances; safe values are inferred instead.
 
 
-def ipc_get_info(instance: str | None = None) -> dict:
+def ipc_get_info(instance: str | None = None) -> dict[str, Any]:
     """Get Everything service info via WM_IPC messages.
 
     Everything 1.5a restarts when it receives IPC_GET_TARGET_MACHINE
@@ -656,7 +657,7 @@ def ipc_get_info(instance: str | None = None) -> dict:
     IPC_IS_APPDATA = 26
 
     def _send(wp: int) -> int:
-        return user32.SendMessageW(ev_hwnd, WM_USER, wp, 0)
+        return int(user32.SendMessageW(ev_hwnd, WM_USER, wp, 0))
 
     is_15a = instance == "1.5a"
 

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Iterator
+from typing import Any
 
 from .constants import SortType
 from .ipc import (
@@ -54,9 +55,11 @@ def resolve_instance(explicit: str | None = None) -> str | None:
 class EverythingAPI:
     """Pythonic wrapper around Everything IPC."""
 
+    _instance: str | None
+
     def __init__(self, instance: str | None = ...) -> None:  # type: ignore[assignment]
         # Auto-detect instance on construction
-        if instance is ...:
+        if instance is ...:  # type: ignore[comparison-overlap]
             try:
                 self._instance = resolve_instance()
             except EverythingNotRunning as exc:
@@ -86,7 +89,7 @@ class EverythingAPI:
         match_path: bool = False,
         match_whole_word: bool = False,
         regex: bool = False,
-    ) -> Iterator[dict]:
+    ) -> Iterator[dict[str, Any]]:
         """Execute a search and yield result dicts."""
         request_flags = int(compute_request_flags(fields))
 
@@ -121,7 +124,7 @@ class EverythingAPI:
         """Get total number of results (after last query)."""
         return self._last_total_results
 
-    def get_version(self) -> dict:
+    def get_version(self) -> dict[str, Any]:
         """Get Everything version info."""
         try:
             return ipc_get_version(self._instance)
@@ -130,7 +133,7 @@ class EverythingAPI:
         except IPCError as exc:
             raise EverythingError(str(exc)) from exc
 
-    def get_info(self) -> dict:
+    def get_info(self) -> dict[str, Any]:
         """Get Everything service info."""
         try:
             return ipc_get_info(self._instance)

@@ -19,6 +19,7 @@ from __future__ import annotations
 import fnmatch
 import re
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -100,30 +101,30 @@ def _parse_term(raw: str) -> _Term:
     return _Term(field=None, pattern=raw, negate=negate, is_glob=has_glob)
 
 
-def _get_match_target(record: dict, field: str | None) -> str:
+def _get_match_target(record: dict[str, Any], field: str | None) -> str:
     """Get the string to match against from the record."""
     if field == 'path':
-        return record.get('full_path', '') or record.get('path', '')
+        return str(record.get('full_path', '') or record.get('path', ''))
     if field == 'name':
-        return record.get('name', '')
+        return str(record.get('name', ''))
     if field == 'ext':
         ext = record.get('ext', '')
         # Strip leading dot for matching (Everything ext: doesn't use dot)
-        return ext.lstrip('.') if ext else ''
+        return str(ext).lstrip('.') if ext else ''
     # Default: full_path (covers both name and path)
-    return record.get('full_path', '') or _synthesize_path(record)
+    return str(record.get('full_path', '') or _synthesize_path(record))
 
 
-def _synthesize_path(record: dict) -> str:
+def _synthesize_path(record: dict[str, Any]) -> str:
     """Build a full path from name + path if full_path is missing."""
     path = record.get('path', '')
     name = record.get('name', '')
     if path and name:
         return f"{path}\\{name}"
-    return name or path
+    return str(name or path)
 
 
-def _term_matches(record: dict, term: _Term) -> bool:
+def _term_matches(record: dict[str, Any], term: _Term) -> bool:
     """Check if a single term matches a record."""
     # Special file/folder checks
     if term.special == 'file':
@@ -148,7 +149,7 @@ def _term_matches(record: dict, term: _Term) -> bool:
     return (not result) if term.negate else result
 
 
-def matches_query(record: dict, parsed: list[list[_Term]]) -> bool:
+def matches_query(record: dict[str, Any], parsed: list[list[_Term]]) -> bool:
     """Check if a record matches a parsed query (AND of OR groups)."""
     for or_group in parsed:
         # At least one term in the OR group must match
