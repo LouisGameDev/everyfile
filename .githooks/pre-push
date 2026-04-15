@@ -1,0 +1,13 @@
+#!/bin/sh
+# Pre-push hook — mirrors the GitHub Actions CI workflow.
+# Runs mypy + pytest locally before allowing a push.
+
+set -e
+
+echo "── pre-push: mypy ──"
+python -m mypy src/
+
+echo "── pre-push: pytest ──"
+python -m pytest -q
+
+echo "── pre-push: all checks passed ──"
