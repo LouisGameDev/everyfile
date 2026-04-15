@@ -62,6 +62,7 @@ The difference grows with drive size. On multi-drive systems with millions of fi
 - **Pipe composition** — chain `ev` commands to filter results without re-querying
 - **Zero dependencies** — stdlib + ctypes only, no DLL needed
 - **Everything search syntax** — full pass-through (`ext:`, `dm:`, `size:`, `content:`, `dupe:`, regex, wildcards, macros)
+- **Importable Python API** — use as a library with typed `Cursor`/`Row` objects, DB-API 2.0 semantics
 - **Multi-instance support** — works with Everything 1.4, 1.5, and 1.5a side by side
 - **Pure Python IPC** — communicates via ctypes `SendMessageW` / `WM_COPYDATA`, no DLL required
 
@@ -516,6 +517,164 @@ Running Everything instances:
 Active instance: 1.5a
   Selected via: auto-detect
 ```
+
+## Python API
+
+`everything-cli` is also a fully importable Python library — no CLI needed. The API uses DB-API 2.0 cursor/row semantics, is fully type-annotated, and has zero dependencies.
+
+```powershell
+pip install everything-cli
+```
+
+### Quick Start
+
+```python
+from everything_cli import search, count
+
+# Iterate results
+for row in search("ext:py"):
+    print(row.name, row.full_path)
+
+# Count matches without fetching
+print(f"Python files: {count('ext:py')}")
+```
+
+### Search with Options
+
+```python
+from everything_cli import search
+
+# Find the 10 largest log files
+cursor = search(
+    "ext:log",
+    fields="size",
+    sort="size",
+    descending=True,
+    limit=10,
+)
+
+print(f"Showing {cursor.count} of {cursor.total} total matches")
+for row in cursor:
+    print(f"  {row.size:>12,} bytes  {row.full_path}")
+```
+
+Parameters: `query`, `fields`, `sort`, `descending`, `limit`, `offset`, `match_case`, `match_path`, `match_whole_word`, `regex`, `instance`.
+
+### Cursor — Fetch Patterns
+
+`search()` returns a `Cursor` — a forward-only iterator with DB-API 2.0 fetch methods.
+
+```python
+from everything_cli import search
+
+cursor = search("ext:py", limit=100)
+
+# Metadata is available immediately (before iterating)
+print(f"Total matches: {cursor.total}")
+print(f"Results in cursor: {cursor.count}")
+
+# Fetch one at a time
+first = cursor.fetchone()       # Row | None
+
+# Fetch in batches
+batch = cursor.fetchmany(20)    # list[Row] (up to 20)
+
+# Fetch all remaining
+rest = cursor.fetchall()        # list[Row]
+```
+
+Batch processing large result sets:
+
+```python
+cursor = search("ext:log", limit=10_000, fields="size")
+
+while batch := cursor.fetchmany(500):
+    for row in batch:
+        process(row)
+```
+
+### Row — Typed Property Access
+
+Each result is a `Row` with typed properties and dict-style access.
+
+```python
+from everything_cli import search
+
+for row in search("ext:py dm:today", fields="size,dates"):
+    # Typed properties (IDE autocomplete works)
+    row.name            # str    — always present
+    row.path            # str    — always present
+    row.full_path       # str    — always present
+    row.size            # int | None
+    row.date_modified   # str | None (ISO 8601)
+    row.date_created    # str | None (ISO 8601)
+    row.is_file         # bool | None
+
+    # Dict-style access
+    row["name"]
+    row.get("size", 0)
+    "size" in row       # True
+
+    # Serialize to dict
+    row.to_dict()       # {"name": ..., "path": ..., ...}
+```
+
+### Everything Class — Reusable Connection
+
+For repeated queries or service introspection, create an `Everything` instance.
+
+```python
+from everything_cli import Everything
+
+ev = Everything()               # auto-detect running instance
+# ev = Everything("1.5a")      # target a specific instance
+
+# Reuse connection for multiple queries
+py_files = ev.search("ext:py", limit=5)
+log_files = ev.search("ext:log", sort="size", descending=True, limit=5)
+total_py = ev.count("ext:py")
+
+# Service introspection
+print(ev.version)               # {"major": 1, "minor": 5, "revision": 0, ...}
+print(ev.info)                  # indexed file/folder counts
+print(ev.instance_name)         # "1.5a"
+
+# List all running instances
+for inst in Everything.instances():
+    print(inst["name"], inst["hwnd"])
+```
+
+### Error Handling
+
+```python
+from everything_cli import search, EverythingError
+
+try:
+    results = search("ext:py").fetchall()
+except EverythingError as e:
+    if e.is_not_running:
+        print("Everything is not running")
+    else:
+        print(f"IPC error: {e}")
+```
+
+### Fields and Sorting
+
+```python
+from everything_cli import search
+
+# Field groups: "default", "all", "dates", "meta", "hl"
+search("*.py", fields="all")            # every available field
+search("*.py", fields="meta")           # size, ext, attributes, is_file, is_folder
+search("*.py", fields="size,ext")       # individual fields
+
+# Sort options: name, path, size, ext, created, modified, accessed, ...
+search("*.py", sort="size", descending=True)
+search("*.py", sort="modified")         # oldest first
+search("*.py", sort="modified", descending=True)  # newest first
+```
+
+For the full API reference, see [docs/PYTHON_API_SPEC.md](docs/PYTHON_API_SPEC.md).
 
 ## Architecture
 
