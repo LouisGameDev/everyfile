@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "everyfile"
-version = "2026.4.20"
+version = "2026.4.21"
 description = "Zero-dependency Python CLI for Voidtools Everything search. Pure Python IPC via ctypes — no DLL required."
 readme = "README.md"
 requires-python = ">=3.11"
