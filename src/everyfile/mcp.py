@@ -56,11 +56,13 @@ def search_files(
             match_whole_word=match_whole_word,
             regex=regex,
         )
-        lines = [json.dumps(row.to_dict(), ensure_ascii=False) for row in cursor]
-        lines.append(
-            f"\nFound {cursor.count:,} results (of {cursor.total:,} total matches)"
-        )
-        return "\n".join(lines)
+        rows = [row.to_dict() for row in cursor]
+        result = {
+            "results": rows,
+            "count": cursor.count,
+            "total": cursor.total,
+        }
+        return json.dumps(result, ensure_ascii=False)
     except EverythingError as exc:
         raise _mcp_error(exc) from exc
 
@@ -83,7 +85,7 @@ def count_files(
             match_whole_word=match_whole_word,
             regex=regex,
         )
-        return f'{total:,} files/folders match "{query}"'
+        return json.dumps({"query": query, "total": total})
     except EverythingError as exc:
         raise _mcp_error(exc) from exc
 
@@ -102,16 +104,18 @@ def get_everything_info() -> str:
         v = info["version"]
         inst = ev.instance_name
 
-        parts = [f'Everything v{v} (instance: "{inst}")']
-
+        result: dict[str, object] = {
+            "version": v,
+            "instance": inst,
+        }
         if info.get("target") is not None:
-            parts.append(f'Target: {info["target"]}')
+            result["target"] = info["target"]
         if info.get("db_loaded") is not None:
-            parts.append(f'Database loaded: {"yes" if info["db_loaded"] else "no"}')
-        parts.append(f'Running as admin: {"yes" if info.get("is_admin") else "no"}')
-        parts.append(f'Using AppData: {"yes" if info.get("is_appdata") else "no"}')
+            result["db_loaded"] = info["db_loaded"]
+        result["is_admin"] = bool(info.get("is_admin"))
+        result["is_appdata"] = bool(info.get("is_appdata"))
 
-        return "\n".join(parts)
+        return json.dumps(result)
     except EverythingError as exc:
         raise _mcp_error(exc) from exc
 
