@@ -19,17 +19,11 @@ jobs:
           cp -r .agents/skills/everyfile /tmp/everyfile-skill
           rm -rf /tmp/everyfile-skill/references/everything-sdk
 
-      - name: Extract version and changelog from release
+      - name: Extract version from pyproject.toml
         id: release
         run: |
-          VERSION="${{ github.event.release.tag_name }}"
-          # Strip leading 'v' for semver
-          VERSION="${VERSION#v}"
-          # Convert CalVer YYYY.M.D to semver M.D.PATCH using minor.patch=M.D, major=year
-          # ClawHub requires semver - use the SKILL.md metadata version instead
-          SKILL_VERSION=$(grep '"version"' .agents/skills/everyfile/SKILL.md | grep -oP '"version":\s*"\K[^"]+')
-          echo "version=$SKILL_VERSION" >> "$GITHUB_OUTPUT"
-          echo "changelog=${{ github.event.release.body }}" >> "$GITHUB_OUTPUT"
+          VERSION=$(grep '^version' pyproject.toml | grep -oP '["'"'"']\K[^"'"'"']+')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Publish to ClawHub
         env:
