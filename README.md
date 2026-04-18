@@ -2,7 +2,35 @@
 
 [![CI](https://github.com/LouisGameDev/everyfile/actions/workflows/ci.yml/badge.svg)](https://github.com/LouisGameDev/everyfile/actions/workflows/ci.yml)
 
-[What is Everything?](#what-is-everything) · [Getting Started](#getting-started) · [CLI](#quick-start) · [Python API](#python-api) · [MCP Server](#mcp-server) · [Agent Skill](#agent-skill--teach-any-ai-agent-to-use-everything) · [Search Syntax](#everything-search-syntax) · [Examples](#examples) · [Development](#development)
+## Table of Contents
+
+| | Section | What's inside |
+|---|---------|---------------|
+| **Intro** | [What is Everything?](#what-is-everything) | Why Everything beats Windows Search, benchmark comparison |
+| | [Features](#features) | Capabilities at a glance |
+| **Setup** | [Install](#install) | |
+| | [Prerequisites](#prerequisites) | Windows, Python ≥ 3.11, Everything running |
+| | [CLI](#cli--search-files-from-the-terminal) | `pip install everyfile` — `ev` command |
+| | [Python API](#python-api--search-files-from-code) | `from everyfile import search` |
+| | [MCP Server](#mcp-server--give-ai-assistants-file-search) | `pip install everyfile[mcp]` + client config |
+| | [Agent Skill](#agent-skill--teach-any-ai-agent-to-use-everything) | `npx skills add LouisGameDev/everyfile` |
+| | [Install from source](#install-from-source) | Editable dev install |
+| | [Command aliases](#command-aliases) | `ev`, `every`, `everyfile` |
+| **CLI** | [Quick Start](#quick-start) | First commands to try |
+| | [Using Results](#using-results-with-other-commands) | VS Code, delete, copy, grep, jq, pagination |
+| | [Examples](#examples) | Sort, filter, regex, count, pipes, `ev filter`, `ev pick`, output modes |
+| **CLI Reference** | [Fields](#fields) | `-f` / `--fields` options and groups |
+| | [Sorting](#sorting) | `--sort` options, default order |
+| | [`ev filter` flags](#ev-filter-flags) | Structured NDJSON filtering flags |
+| | [Search Syntax](#everything-search-syntax) | Operators, wildcards, functions, macros, size/date filters |
+| | [Instance Management](#instance-management) | Multi-version Everything, `--instance`, env var |
+| | [Service Info](#service-info) | `--version`, `--info`, `--instances` |
+| **Python API** | [Python API](#python-api) | `search()`, `count()`, `Cursor`, `Row`, `Everything` class, error handling |
+| **Internals** | [Architecture](#architecture) | Module layout, IPC approach |
+| | [MCP Server](#mcp-server) | `search_files`, `count_files`, `get_everything_info` tools |
+| | [Development](#development) | Clone, install, type-check, test |
+| | [See Also](#see-also) | External links |
+| | [License](#license) | MIT |
 
 A zero-dependency Python CLI for [Voidtools Everything](https://www.voidtools.com/) search.
 
@@ -76,9 +104,9 @@ The difference grows with drive size. On multi-drive systems with millions of fi
 - **Multi-instance support** — works with Everything 1.4, 1.5, and 1.5a side by side
 - **Pure Python IPC** — communicates via ctypes `SendMessageW` / `WM_COPYDATA`, no DLL required
 
-## Getting Started
+# Install
 
-### Prerequisites
+## Prerequisites
 
 1. **Windows** — Everything uses NTFS and Windows IPC
 2. **Python ≥ 3.11**
@@ -86,11 +114,9 @@ The difference grows with drive size. On multi-drive systems with millions of fi
 
 > **New to Everything?** Download [Everything 1.5a](https://www.voidtools.com/downloads/#alpha) (recommended). It's the latest alpha with the most features, runs alongside stable versions, and is what most power users run. Install it, let it index your drives (takes ~1 second), and leave it running in the system tray.
 
-### Install
-
 Pick what you need — each layer builds on the one before it.
 
-#### CLI — search files from the terminal
+## CLI — search files from the terminal
 
 ```powershell
 pip install everyfile
@@ -104,7 +130,7 @@ ev ext:log size:>1mb dm:today      # large log files modified today
 ev server.py -n 1 -l | code -     # open first match in VS Code
 ```
 
-#### Python API — search files from code
+## Python API — search files from code
 
 Same package, just import it:
 
@@ -117,7 +143,7 @@ for row in search("ext:py dm:today", limit=10):
 print(f"Total Python files: {count('ext:py')}")
 ```
 
-#### MCP Server — give AI assistants file search
+## MCP Server — give AI assistants file search
 
 ```powershell
 pip install everyfile[mcp]
@@ -137,7 +163,7 @@ Add to your MCP client config (VS Code `settings.json`, Claude Desktop, etc.):
 
 Your AI assistant can now call `search_files`, `count_files`, and `get_everything_info` directly.
 
-#### Agent Skill — teach any AI agent to use Everything
+## Agent Skill — teach any AI agent to use Everything
 
 Install to any [Agent Skills](https://agentskills.io/)-compatible agent (Copilot, Claude Code, Cursor, Codex, and [40+ more](https://agentskills.io/clients)):
 
@@ -153,7 +179,7 @@ npx skills add ./path/to/everyfile -g
 
 The skill teaches agents *when* and *how* to use `ev`, the Python API, and the MCP tools — with search syntax, safety guidelines, and decision logic included.
 
-### Install from source
+## Install from source
 
 ```powershell
 git clone https://github.com/LouisGameDev/everyfile.git
@@ -162,7 +188,7 @@ pip install -e ".[dev]"           # editable install with dev tools
 pip install -e ".[dev,mcp]"       # + MCP server
 ```
 
-### Command aliases
+## Command aliases
 
 All three run the same binary. Examples in this README use `ev`.
 
