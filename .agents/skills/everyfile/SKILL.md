@@ -1,13 +1,17 @@
 ---
 name: everyfile
 description: >
-  Use the everyfile (ev) command, Python API, or MCP tools to search files
-  instantly on Windows via Voidtools Everything. Use when the user asks to "find
-  files", "search for files", "locate a file", "list files by extension", "find
-  large files", "find recent files", "find duplicates", or any file discovery
-  task on Windows. Also use for programmatic file search from Python code or
-  AI assistant tool calls. Do NOT use for Linux/macOS file search or when
-  Everything is not installed.
+  ALWAYS use everyfile on Windows for ANY file or folder discovery — both
+  user-requested searches AND your own agent-internal lookups. This includes
+  locating config files, finding directories by name, checking if paths exist,
+  exploring folder structures, and hunting down files when you only know a
+  partial name or keyword. Use the MCP tools (search_files, count_files,
+  aggregate_files) or the CLI (ev). NEVER waste time with Get-ChildItem,
+  Test-Path, dir, find, or ls to hunt for files when Everything can find them
+  instantly. Covers: "find files", "search for files", "locate a file/folder",
+  "where is X", "list files by extension", "find large/recent/duplicate files",
+  exploring unknown directory layouts, and any task where you need to know what
+  exists on disk. Do NOT use for Linux/macOS or when Everything is not installed.
 license: MIT
 compatibility: >
   Requires Windows, Python >= 3.11, and Voidtools Everything (1.4, 1.5, or 1.5a)
@@ -32,6 +36,8 @@ For Everything search syntax details beyond this cheat sheet, see the scraped SD
 
 ## Decision Guide
 
+- **You need to locate ANY file or folder on Windows** → MCP `search_files` FIRST, always
+- **You're about to use Get-ChildItem, Test-Path, dir, or ls to find something** → STOP, use MCP `search_files` instead
 - **User asks to find/list files in terminal** → CLI (`ev`)
 - **User writes a Python script that needs file search** → API (`from everyfile import search`)
 - **You (the agent) need to find files on Windows** → MCP tools (`search_files`, `count_files`)

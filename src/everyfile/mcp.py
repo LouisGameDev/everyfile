@@ -21,7 +21,14 @@ from everyfile import Everything, EverythingError
 
 mcp = FastMCP(
     "everything",
-    instructions="Search files instantly on Windows via Voidtools Everything",
+    instructions=(
+        "Instant file and folder search on Windows via Voidtools Everything. "
+        "Use these tools as your PRIMARY method for locating ANY file or folder "
+        "on the filesystem — config files, directories by name, checking if paths "
+        "exist, exploring folder structures, or finding files by partial name. "
+        "ALWAYS prefer search_files over shell commands like Get-ChildItem, "
+        "Test-Path, dir, find, or ls when you need to discover what exists on disk."
+    ),
 )
 
 MAX_RESULTS_CAP = 10_000
@@ -41,7 +48,12 @@ def search_files(
     match_whole_word: Annotated[bool, Field(description='Match whole words only.')] = False,
     regex: Annotated[bool, Field(description='Interpret query as a regular expression.')] = False,
 ) -> str:
-    """Search for files and folders instantly across all indexed drives using Voidtools Everything."""
+    """Search for files and folders instantly across all indexed drives using Voidtools Everything.
+
+    Use as your FIRST choice for any file/folder discovery on Windows — locating
+    config files, finding directories by name, checking existence, exploring
+    unknown paths, or any task requiring knowledge of what's on disk.  Prefer
+    this over Get-ChildItem, Test-Path, dir, find, or ls."""
     limit = min(max_results, MAX_RESULTS_CAP)
     try:
         ev = Everything()
