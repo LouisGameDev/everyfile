@@ -1,6 +1,8 @@
 # everyfile
 
 [![CI](https://github.com/LouisGameDev/everyfile/actions/workflows/ci.yml/badge.svg)](https://github.com/LouisGameDev/everyfile/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/everyfile)](https://pypi.org/project/everyfile/)
+[![ClawHub](https://clawhub.ai/badge/louisgamedev/everyfile)](https://clawhub.ai/louisgamedev/everyfile)
 
 ## Table of Contents
 
