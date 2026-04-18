@@ -27,7 +27,7 @@
 | | [Service Info](#service-info) | `--version`, `--info`, `--instances` |
 | **Python API** | [Python API](#python-api) | `search()`, `count()`, `Cursor`, `Row`, `Everything` class, error handling |
 | **Internals** | [Architecture](#architecture) | Module layout, IPC approach |
-| | [MCP Server](#mcp-server) | `search_files`, `count_files`, `get_everything_info` tools |
+| | [MCP Server](#mcp-server) | `search_files`, `count_files`, `aggregate_files`, `get_everything_info` tools |
 | | [Development](#development) | Clone, install, type-check, test |
 | | [See Also](#see-also) | External links |
 | | [License](#license) | MIT |
@@ -161,7 +161,7 @@ Add to your MCP client config (VS Code `settings.json`, Claude Desktop, etc.):
 }
 ```
 
-Your AI assistant can now call `search_files`, `count_files`, and `get_everything_info` directly.
+Your AI assistant can now call `search_files`, `count_files`, `aggregate_files`, and `get_everything_info` directly.
 
 ## Agent Skill — teach any AI agent to use Everything
 
@@ -801,7 +801,7 @@ src/everyfile/
   search.py          Search orchestration, pipe filter, count, info, version
   filter.py          Structured NDJSON filter (ev filter)
   pick.py            NDJSON field extraction (ev pick)
-  mcp.py             MCP server (search_files, count_files, get_everything_info)
+  mcp.py             MCP server (search_files, count_files, aggregate_files, get_everything_info)
   querymatch.py      Local query matching for pipe composition
   sdk/
     ipc.py           Pure Python IPC via ctypes (WM_COPYDATA, WM_USER)
@@ -829,6 +829,7 @@ src/everyfile/
 |------|-------------|
 | `search_files` | Search files/folders with full Everything syntax, field selection, sorting, pagination |
 | `count_files` | Count matches without transferring results — check scale before fetching |
+| `aggregate_files` | Server-side analytics — total size, group by extension/folder/drive, no result cap |
 | `get_everything_info` | Service diagnostics: version, instance, admin status |
 
 ### Example
@@ -839,6 +840,10 @@ Once configured, your AI assistant can call these tools directly:
 > Find the 5 largest Python files modified this week
 
 search_files(query="ext:py size:>50kb dm:thisweek", sort="size", descending=true, max_results=5)
+
+> How much space do my images use, broken down by format?
+
+aggregate_files(query="ext:jpg;png;gif;webp;heic;svg", group_by="ext", sort_by="total_size")
 ```
 
 ## Development

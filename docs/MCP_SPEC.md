@@ -154,6 +154,55 @@ Indexed: 2,345,678 files, 456,789 folders (2,802,467 total)
 
 ---
 
+### 4.4 `aggregate_files`
+
+Aggregate file statistics server-side. Streams all matching rows internally (no result cap) and computes totals and optional grouping. Use for analytical questions like "how much space do my images use?" or "which extensions are biggest?".
+
+**Input Schema:**
+
+| Parameter          | Type     | Required | Default        | Description |
+|--------------------|----------|----------|----------------|-------------|
+| `query`            | string   | **yes**  | —              | Everything search expression |
+| `group_by`         | string   | no       | `null`         | `"ext"` (file extension), `"folder"` (parent directory), `"root"` (drive letter), or null for flat totals |
+| `top_n`            | integer  | no       | `20`           | Max groups to return (sorted by sort_by) |
+| `sort_by`          | string   | no       | `"total_size"` | Sort groups by: `"count"`, `"total_size"`, `"avg_size"`, `"min_size"`, `"max_size"` |
+| `match_case`       | boolean  | no       | `false`        | Case-sensitive search |
+| `match_path`       | boolean  | no       | `false`        | Match against full path |
+| `match_whole_word` | boolean  | no       | `false`        | Match whole words only |
+| `regex`            | boolean  | no       | `false`        | Interpret query as regex |
+
+**Output (flat, no grouping):**
+
+```json
+{"query": "ext:jpg;png", "total_count": 542585, "total_size": 411286099738}
+```
+
+**Output (grouped):**
+
+```json
+{
+  "query": "ext:jpg;png",
+  "total_count": 542585,
+  "total_size": 411286099738,
+  "group_by": "ext",
+  "groups_total": 2,
+  "groups": [
+    {"key": ".jpg", "count": 159299, "total_size": 313052571018, "avg_size": 1965188, "min_size": 0, "max_size": 304323712},
+    {"key": ".png", "count": 383286, "total_size": 53753168114, "avg_size": 140241, "min_size": 0, "max_size": 474547418}
+  ]
+}
+```
+
+**Group keys:**
+
+| `group_by` | Key value |
+|---|---|
+| `"ext"` | Lowercased extension with dot (e.g. `".jpg"`, `".png"`) |
+| `"folder"` | Parent directory path (e.g. `"C:\\Users\\Alice\\Photos"`) |
+| `"root"` | Drive letter (e.g. `"C:"`, `"D:"`) |
+
+---
+
 ## 5. Tool Behavior Details
 
 ### Result shape
@@ -165,6 +214,7 @@ Each result object in `search_files` output contains only the fields that were r
 | `name`          | string | yes            |
 | `path`          | string | yes            |
 | `full_path`     | string | yes            |
+| `size`          | int    | yes (default)  |
 | `date_modified` | string | yes (default)  |
 
 When `fields="all"` is requested, all available fields are included:
@@ -204,7 +254,7 @@ Errors are returned as MCP tool errors (not exceptions in the output):
 | Concern | Mitigation |
 |---------|------------|
 | **Read-only** | No tool can create, modify, or delete files. Everything itself is read-only. |
-| **Result cap** | `max_results` is capped server-side at **10,000** to prevent token flooding. Default is **200**. |
+| **Result cap** | `search_files`: `max_results` capped at **10,000**, default **200**. `aggregate_files`: no result cap (streams internally, returns only summaries). |
 | **No file content** | Results include metadata only (paths, sizes, dates). File contents are never read or returned. |
 | **No path traversal** | Everything operates on its own index. No user-supplied paths are resolved or opened. |
 | **Instance isolation** | If multiple Everything instances run, each MCP server connects to one (auto-detected or configured). |
@@ -235,6 +285,34 @@ Agent → search_files(query="ext:log", fields="name,full_path,size", sort="size
 
 ```
 Agent → get_everything_info()
+```
+
+### "How much disk space do my images use?"
+
+```
+Agent → aggregate_files(query="ext:jpg;png;gif;webp;heic;svg")
+→ {total_count: 657727, total_size: 411286099738}
+```
+
+### "Break down image space by extension"
+
+```
+Agent → aggregate_files(query="ext:jpg;png;gif;webp;heic;svg", group_by="ext", sort_by="total_size")
+→ groups sorted by total size, top 20
+```
+
+### "Which drive has the most images?"
+
+```
+Agent → aggregate_files(query="ext:jpg;png;gif", group_by="root")
+→ [{key: "F:", count: 289921, total_size: ...}, ...]
+```
+
+### "Which formats are heaviest per file?"
+
+```
+Agent → aggregate_files(query="ext:jpg;png;gif;raw;nef;tif", group_by="ext", sort_by="avg_size")
+→ groups sorted by average file size
 ```
 
 ---

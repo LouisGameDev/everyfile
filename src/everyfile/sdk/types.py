@@ -38,7 +38,8 @@ FIELD_GROUPS: dict[str, list[str]] = {
 }
 
 # Per spec: name, path always included; full_path for convenience; date_modified for default column.
-DEFAULT_FIELDS: list[str] = ["name", "path", "full_path", "date_modified"]
+# size included by default — nearly free from MFT index and broadly useful.
+DEFAULT_FIELDS: list[str] = ["name", "path", "full_path", "size", "date_modified"]
 
 
 def resolve_fields(field_spec: str | None) -> list[str]:

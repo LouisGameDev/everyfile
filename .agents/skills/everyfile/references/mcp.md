@@ -53,6 +53,39 @@ Returns a single line: `"N files/folders match "query""`. Use to gauge result sc
 
 No parameters. Returns version, instance name, admin status, AppData status.
 
+### `aggregate_files` — Server-side analytics
+
+Streams all matching rows internally and computes aggregates in-process.
+No result cap — handles millions of files. Use for analytical questions
+("how much space?", "which extensions are biggest?", "which folders?").
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `query` | str | *required* | Everything search expression |
+| `group_by` | str \| null | null | `"ext"` (extension), `"folder"` (parent dir), `"root"` (drive letter), or null for flat totals |
+| `top_n` | int | 20 | Max groups returned (sorted by sort_by) |
+| `sort_by` | str | `"total_size"` | `"count"` or `"total_size"` |
+| `match_case` | bool | false | Case-sensitive |
+| `match_path` | bool | false | Match full path |
+| `match_whole_word` | bool | false | Whole words only |
+| `regex` | bool | false | Regex mode |
+
+**Returns (flat):** `{total_count, total_size}`
+
+**Returns (grouped):** `{total_count, total_size, group_by, groups_total, groups: [{key, count, total_size, avg_size, min_size, max_size}, ...]}`
+
+## When to use which tool
+
+| Question pattern | Tool |
+|---|---|
+| "How many X files?" (just a count) | `count_files` — O(1), instant |
+| "Show me the 20 biggest log files" | `search_files` — returns rows |
+| "How much disk space do images use?" | `aggregate_files` — flat, no group_by |
+| "Which extensions use the most space?" | `aggregate_files` — `group_by="ext"` |
+| "Break down images by drive" | `aggregate_files` — `group_by="root"` |
+| "Which folders have the most images?" | `aggregate_files` — `group_by="folder"` |
+| "Drill into F:\ images by subfolder" | `aggregate_files` — add `parent:F:\` to query, `group_by="folder"` |
+
 ## Search Syntax Quick Reference
 
 ```
@@ -125,6 +158,8 @@ get_everything_info()
 
 - Default `max_results` is 200. Increase for bulk operations, but cap at 10,000.
 - Use `count_files` first when you're unsure how many matches to expect.
+- Use `aggregate_files` for any "how much?" or "what's the distribution?" question — it handles millions of files in seconds with no pagination.
+- To drill down by folder, narrow the query with `parent:` and use `group_by="folder"` — each call shows one level of the tree.
 - Use `path:dirname` in the query to scope results to a directory. The `match_path` flag makes the *filename query* match against the full path — it's rarely needed.
 - `sort="modified"` + `descending=true` gives most recently changed first.
-- All three tools are read-only — safe to call without confirmation.
+- All tools are read-only — safe to call without confirmation.

@@ -26,7 +26,7 @@ Three interfaces — choose based on context:
 |-----------|-------------|-----------|
 | **CLI** (`ev`) | Terminal commands, shell scripts, piping results between commands | [cli.md](references/cli.md) |
 | **Python API** | Python scripts/tools that need programmatic file search, Cursor/Row iteration | [api.md](references/api.md) |
-| **MCP Tools** | AI assistants calling `search_files`, `count_files`, `get_everything_info` via MCP | [mcp.md](references/mcp.md) |
+| **MCP Tools** | AI assistants calling `search_files`, `count_files`, `aggregate_files`, `get_everything_info` via MCP | [mcp.md](references/mcp.md) |
 
 For Everything search syntax details beyond this cheat sheet, see the scraped SDK docs in [everything-sdk/](references/everything-sdk/) (especially [everything-sdk/index.md](references/everything-sdk/index.md) for search syntax and [everything-sdk/ipc.md](references/everything-sdk/ipc.md) for IPC internals).
 
@@ -36,6 +36,8 @@ For Everything search syntax details beyond this cheat sheet, see the scraped SD
 - **User writes a Python script that needs file search** → API (`from everyfile import search`)
 - **You (the agent) need to find files on Windows** → MCP tools (`search_files`, `count_files`)
 - **User asks "how many X files?"** → MCP `count_files` or CLI `ev --count`
+- **User asks "how much space?" / "what's the distribution?"** → MCP `aggregate_files`
+- **User asks "break down by extension/folder/drive"** → MCP `aggregate_files` with `group_by`
 - **User asks for file contents after search** → CLI `ev -l | ForEach-Object { ... }` or API iteration
 - **User asks about Everything status** → MCP `get_everything_info` or CLI `ev --info`
 
