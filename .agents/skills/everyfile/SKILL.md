@@ -13,7 +13,7 @@ license: MIT
 compatibility: >
   Requires Windows, Python >= 3.11, and Voidtools Everything (1.4, 1.5, or 1.5a)
   running in the background.
-metadata: {"author": "LouisGameDev", "version": "2026.4.19", "openclaw": {"os": ["win32"], "requires": {"bins": ["ev"]}, "install": [{"id": "pip", "kind": "pip", "package": "everyfile", "bins": ["ev", "every", "everyfile"], "label": "Install everyfile (pip install everyfile)", "os": ["win32"]}]}}
+metadata: {"author": "LouisGameDev", "version": "2026.4.20", "openclaw": {"os": ["win32"], "requires": {"bins": ["ev"]}, "install": [{"id": "pip", "kind": "pip", "package": "everyfile", "bins": ["ev", "every", "everyfile"], "label": "Install everyfile (pip install everyfile)", "os": ["win32"]}]}}
 ---
 
 # everyfile
@@ -26,8 +26,6 @@ Three interfaces — choose based on context:
 | **CLI** (`ev`) | Terminal commands, shell scripts, piping results between commands | [cli.md](references/cli.md) |
 | **Python API** | Python scripts/tools that need programmatic file search, Cursor/Row iteration | [api.md](references/api.md) |
 | **MCP Tools** | AI assistants calling `search_files`, `count_files`, `aggregate_files`, `get_everything_info` via MCP | [mcp.md](references/mcp.md) |
-
-For Everything search syntax details beyond this cheat sheet, see the scraped SDK docs in [everything-sdk/](references/everything-sdk/) (especially [everything-sdk/index.md](references/everything-sdk/index.md) for search syntax and [everything-sdk/ipc.md](references/everything-sdk/ipc.md) for IPC internals).
 
 ## Decision Guide
 
