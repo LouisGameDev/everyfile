@@ -15,9 +15,7 @@ import time
 
 STEPS: dict[str, list[list[str]]] = {
     "lint": [
-        # --no-site-packages: simulate CI where optional deps (mcp, pydantic)
-        # are not installed, so mypy overrides are exercised.
-        ["mypy", "--no-site-packages", "src/"],
+        ["mypy", "src/"],
         ["pyright", "src/"],
     ],
     "test": [

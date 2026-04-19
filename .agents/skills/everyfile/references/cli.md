@@ -179,7 +179,7 @@ ev ext:py -f all -j | ev pick name size date_modified
 
 ```powershell
 # Open most recently modified match in VS Code
-code $(ev "mcp.py" --sort modified -d -n 1 -l)
+code $(ev "search.py" --sort modified -d -n 1 -l)
 
 # Batch process: lint all Python files modified today
 ev "ext:py dm:today" -l | ForEach-Object { pylint $_ }

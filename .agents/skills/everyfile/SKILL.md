@@ -3,11 +3,11 @@ name: everyfile
 description: >
   Fast file and folder search on Windows via Voidtools Everything.
   Use when the user asks to find, list, or count files/folders — by name, path,
-  extension, size, date, or duplicates. Provides the MCP tools (search_files,
-  count_files, aggregate_files) and the CLI (ev). Prefer over Get-ChildItem or
-  dir when Everything is running and broad/instant search is needed.
-  Covers: "find files", "search for files", "locate a file/folder",
-  "where is X", "list files by extension", "find large/recent/duplicate files".
+  extension, size, date, or duplicates. Provides the CLI (ev) and Python API.
+  Prefer over Get-ChildItem or dir when Everything is running and broad/instant
+  search is needed. Covers: "find files", "search for files",
+  "locate a file/folder", "where is X", "list files by extension",
+  "find large/recent/duplicate files".
   Do NOT use for Linux/macOS or when Everything is not installed.
 license: MIT
 compatibility: >
@@ -19,29 +19,25 @@ metadata: {"author": "LouisGameDev", "openclaw": {"os": ["win32"], "requires": {
 # everyfile
 
 Instant file search on Windows via [Voidtools Everything](https://www.voidtools.com/).
-Three interfaces — choose based on context:
+Two interfaces — choose based on context:
 
 | Interface | When to use | Reference |
-|-----------|-------------|-----------|
+|-----------|-------------|----------|
 | **CLI** (`ev`) | Terminal commands, shell scripts, piping results between commands | [cli.md](references/cli.md) |
 | **Python API** | Python scripts/tools that need programmatic file search, Cursor/Row iteration | [api.md](references/api.md) |
-| **MCP Tools** | AI assistants calling `search_files`, `count_files`, `aggregate_files`, `get_everything_info` via MCP | [mcp.md](references/mcp.md) |
 
 ## Decision Guide
 
-- **User asks to find/list files** → MCP `search_files` or CLI `ev`
+- **User asks to find/list files** → CLI `ev` or API `search()`
 - **User writes a Python script that needs file search** → API (`from everyfile import search`)
-- **User asks "how many X files?"** → MCP `count_files` or CLI `ev --count`
-- **User asks "how much space?" / "what's the distribution?"** → MCP `aggregate_files`
-- **User asks "break down by extension/folder/drive"** → MCP `aggregate_files` with `group_by`
+- **User asks "how many X files?"** → CLI `ev --count` or API `count()`
 - **User asks for file contents after search** → CLI `ev -l | ForEach-Object { ... }` or API iteration
-- **User asks about Everything status** → MCP `get_everything_info` or CLI `ev --info`
+- **User asks about Everything status** → CLI `ev --info`
 
 ## Install
 
 ```powershell
-pip install everyfile          # CLI + API
-pip install everyfile[mcp]     # + MCP server
+pip install everyfile
 ```
 
 ## Search Syntax (shared across all interfaces)

@@ -4,17 +4,45 @@
 [![PyPI](https://img.shields.io/pypi/v/everyfile)](https://pypi.org/project/everyfile/)
 [![ClawHub](https://img.shields.io/badge/ClawHub-everyfile-blue)](https://clawhub.ai/louisgamedev/everyfile)
 
-> **Find any file on Windows in milliseconds — no indexing wait, no recursion, no guessing.**
+> **Query every file on every drive — by name, regex, extension, size, date, attributes, duplicates — with full boolean logic. Results in under a millisecond. Your filesystem is a database.**
 
-Windows has 100 million+ files. Agents and workflows that navigate them with `Get-ChildItem`, `os.walk`, or `glob` are flying blind — slow, fragile, and context-starved. `everyfile` changes that.
+10 million files across multiple drives. Agents and workflows that navigate them with `Get-ChildItem`, `os.walk`, or `glob` are flying blind — slow, fragile, and context-starved. `everyfile` changes that.
 
-Backed by [Voidtools Everything](https://www.voidtools.com/)'s real-time NTFS index, every query resolves in **< 1 ms** regardless of drive size. An agent that would previously need to recurse directories, guess paths, and timeout now gets an **instant, exact answer** — with size, dates, attributes, and duplicate detection built in.
+Backed by [Voidtools Everything](https://www.voidtools.com/)'s real-time NTFS index, every query resolves in **< 1 ms** regardless of drive size. No recursion. No indexing wait. An agent goes from guessing paths to **instant, structured answers** across your entire filesystem.
 
 ```powershell
-# What used to take 30 seconds of recursion...
-ev ext:py dm:thisweek size:>10kb parent:C:\Projects
+# Find every test file across all drives — Python and JS/TS — in one query
+ev "regex:^test_.+\.py$ | regex:^spec_.+\.(js|ts)$" -n 8
+```
 
-# ...now returns in under a millisecond.
+```
+test_controllers.py  2026-04-18 18:40  E:\Projects\chatbot\tests\controllers          19.7 KB
+test_credentials.py  2026-04-18 18:33  E:\Projects\filesearch\.venv\Lib\site-packages  7.8 KB
+test_platform.py     2026-04-18 18:33  E:\Projects\filesearch\.venv\Lib\site-packages 11.4 KB
+test_backends.py     2026-04-18 18:33  E:\Projects\filesearch\.venv\Lib\site-packages  1.2 KB
+test_typeops.py      2026-04-18 08:30  E:\Projects\filesearch\.venv\Lib\site-packages  3.9 KB
+test_tuples.py       2026-04-18 08:30  E:\Projects\filesearch\.venv\Lib\site-packages  1.1 KB
+test_structs.py      2026-04-18 08:30  E:\Projects\filesearch\.venv\Lib\site-packages  3.9 KB
+test_statements.py   2026-04-18 08:30  E:\Projects\filesearch\.venv\Lib\site-packages  5.5 KB
+
+  8 of 20,755 results for "regex:^test_.+\.py$ | regex:^spec_.+\.(js|ts)$"
+```
+
+```powershell
+# Find duplicate DLLs wasting disk space — across every drive, instantly
+ev "sizedupe: ext:dll size:>1mb" -n 4
+```
+
+```
+graphics_engine.dll  2024-03-31 05:58  C:\Program Files\NVIDIA\RTXVoice         402.5 MB
+graphics_engine.dll  2024-03-31 05:58  C:\Program Files\NVIDIA\Installer2\nv    402.5 MB
+browser_core.dll     2026-04-16 03:51  C:\Program Files\Edge\Application        303.8 MB
+browser_core.dll     2026-04-16 03:51  C:\Program Files\Edge\Optimized          303.8 MB
+
+  4 of 11,800 results for "sizedupe: ext:dll size:>1mb"
+
+  ├ size      1.4 GB
+  └ names     browser_core.dll×2  graphics_engine.dll×2
 ```
 
 Three integration surfaces cover every use case:
@@ -23,7 +51,6 @@ Three integration surfaces cover every use case:
 |---------|----------|
 | **CLI** (`ev`) | Shell scripts, pipelines, terminal power users |
 | **Python API** | Scripts and tools that iterate results programmatically |
-| **MCP Server** | AI agents calling `search_files`, `count_files`, `aggregate_files` as tools |
 
 ## Table of Contents
 
@@ -35,9 +62,8 @@ Three integration surfaces cover every use case:
 | | [Prerequisites](#prerequisites) | Windows, Python ≥ 3.11, Everything running |
 | | [CLI](#cli--search-files-from-the-terminal) | `pip install everyfile` — `ev` command |
 | | [Python API](#python-api--search-files-from-code) | `from everyfile import search` |
-| | [MCP Server](#mcp-server--give-ai-assistants-file-search) | `pip install everyfile[mcp]` + client config |
 | | [Agent Skill](#agent-skill--teach-any-ai-agent-to-use-everything) | `npx skills add LouisGameDev/everyfile` |
-| | [OpenClaw](#openclaw--use-everything-from-openclaw-agents) | Skill + MCP for OpenClaw gateway agents |
+| | [OpenClaw](#openclaw--use-everything-from-openclaw-agents) | Skill for OpenClaw gateway agents |
 | | [Install from source](#install-from-source) | Editable dev install |
 | | [Command aliases](#command-aliases) | `ev`, `every`, `everyfile` |
 | **CLI** | [Quick Start](#quick-start) | First commands to try |
@@ -52,7 +78,6 @@ Three integration surfaces cover every use case:
 | **Python API** | [Python API](#python-api) | `search()`, `count()`, `Cursor`, `Row`, `Everything` class, error handling |
 | **Internals** | [Versioning](#versioning) | CalVer scheme, release workflow |
 | | [Architecture](#architecture) | Module layout, IPC approach |
-| | [MCP Server](#mcp-server) | `search_files`, `count_files`, `aggregate_files`, `get_everything_info` tools |
 | | [Development](#development) | Clone, install, type-check, test |
 | | [See Also](#see-also) | External links |
 | | [License](#license) | MIT |
@@ -125,7 +150,6 @@ The difference grows with drive size. On multi-drive systems with millions of fi
 - **Zero dependencies** — stdlib + ctypes only, no DLL needed
 - **Everything search syntax** — full pass-through (`ext:`, `dm:`, `size:`, `content:`, `dupe:`, regex, wildcards, macros)
 - **Importable Python API** — use as a library with typed `Cursor`/`Row` objects, DB-API 2.0 semantics
-- **MCP server** — expose Everything search to AI assistants (Copilot, Claude, etc.) via Model Context Protocol
 - **Multi-instance support** — works with Everything 1.4, 1.5, and 1.5a side by side
 - **Pure Python IPC** — communicates via ctypes `SendMessageW` / `WM_COPYDATA`, no DLL required
 
@@ -168,26 +192,6 @@ for row in search("ext:py dm:today", limit=10):
 print(f"Total Python files: {count('ext:py')}")
 ```
 
-## MCP Server — give AI assistants file search
-
-```powershell
-pip install everyfile[mcp]
-```
-
-Add to your MCP client config (VS Code `settings.json`, Claude Desktop, etc.):
-
-```jsonc
-{
-  "mcpServers": {
-    "everything": {
-      "command": "everyfile-mcp"
-    }
-  }
-}
-```
-
-Your AI assistant can now call `search_files`, `count_files`, `aggregate_files`, and `get_everything_info` directly.
-
 ## Agent Skill — teach any AI agent to use Everything
 
 Install to any [Agent Skills](https://agentskills.io/)-compatible agent (Copilot, Claude Code, Cursor, Codex, and [40+ more](https://agentskills.io/clients)):
@@ -202,7 +206,7 @@ Or install from a local clone:
 npx skills add ./path/to/everyfile -g
 ```
 
-The skill teaches agents *when* and *how* to use `ev`, the Python API, and the MCP tools — with search syntax, safety guidelines, and decision logic included.
+The skill teaches agents *when* and *how* to use `ev` and the Python API — with search syntax, safety guidelines, and decision logic included.
 
 ## OpenClaw — use Everything from OpenClaw agents
 
@@ -226,25 +230,6 @@ cp -r .agents/skills/everyfile <workspace>/skills/everyfile
 pip install everyfile
 ```
 
-**Optional: add the MCP server** for tool-level access from any agent:
-
-```powershell
-pip install everyfile[mcp]
-```
-
-Then add to your agent's MCP config or `openclaw.json`:
-
-```jsonc
-// In openclaw.json → tools or agent-level MCP config
-{
-  "mcpServers": {
-    "everything": {
-      "command": "everyfile-mcp"
-    }
-  }
-}
-```
-
 The skill auto-gates on `win32` and requires `ev` on PATH. Once installed, your OpenClaw agents will use Everything for all file discovery instead of slow filesystem traversals.
 
 ## Install from source
@@ -253,7 +238,6 @@ The skill auto-gates on `win32` and requires `ev` on PATH. Once installed, your 
 git clone https://github.com/LouisGameDev/everyfile.git
 cd everyfile
 pip install -e ".[dev]"           # editable install with dev tools
-pip install -e ".[dev,mcp]"       # + MCP server
 ```
 
 ## Command aliases
@@ -869,7 +853,6 @@ src/everyfile/
   search.py          Search orchestration, pipe filter, count, info, version
   filter.py          Structured NDJSON filter (ev filter)
   pick.py            NDJSON field extraction (ev pick)
-  mcp.py             MCP server (search_files, count_files, aggregate_files, get_everything_info)
   querymatch.py      Local query matching for pipe composition
   sdk/
     ipc.py           Pure Python IPC via ctypes (WM_COPYDATA, WM_USER)
@@ -886,33 +869,6 @@ src/everyfile/
 ```
 
 **IPC approach**: Pure Python ctypes — `FindWindowW` to locate Everything's hidden IPC window, `SendMessageW` with `WM_COPYDATA` for search queries, `WM_USER` for version/info. No DLL dependency.
-
-## MCP Server
-
-`everyfile` includes an [MCP](https://modelcontextprotocol.io/) server that exposes Everything search to AI assistants like GitHub Copilot, Claude, and any MCP-compatible client. See [Getting Started](#install) for setup.
-
-### Tools
-
-| Tool | Description |
-|------|-------------|
-| `search_files` | Search files/folders with full Everything syntax, field selection, sorting, pagination |
-| `count_files` | Count matches without transferring results — check scale before fetching |
-| `aggregate_files` | Server-side analytics — total size, group by extension/folder/drive, no result cap |
-| `get_everything_info` | Service diagnostics: version, instance, admin status |
-
-### Example
-
-Once configured, your AI assistant can call these tools directly:
-
-```
-> Find the 5 largest Python files modified this week
-
-search_files(query="ext:py size:>50kb dm:thisweek", sort="size", descending=true, max_results=5)
-
-> How much space do my images use, broken down by format?
-
-aggregate_files(query="ext:jpg;png;gif;webp;heic;svg", group_by="ext", sort_by="total_size")
-```
 
 ## Versioning
 
@@ -950,7 +906,7 @@ clawhub publish .agents/skills/everyfile --slug everyfile --version 2026.4.18
 ```powershell
 git clone https://github.com/LouisGameDev/everyfile.git
 cd everyfile
-pip install -e ".[dev,mcp]"
+pip install -e ".[dev]"
 
 # Type check
 mypy src/
