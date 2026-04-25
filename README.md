@@ -924,3 +924,7 @@ pytest
 ## License
 
 MIT
+
+## Download History
+
+[![Download History](https://skill-history.com/chart/louisgamedev/everyfile.svg)](https://skill-history.com/louisgamedev/everyfile)
